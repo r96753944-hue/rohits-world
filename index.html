@@ -1,0 +1,86 @@
+
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Rohit's World</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: linear-gradient(135deg, #10152f, #4c1d95);
+      color: white;
+      text-align: center;
+      min-height: 100vh;
+    }
+    header {
+      padding: 25px 10px;
+      background: #080b18;
+    }
+    h1 { color: #a78bfa; }
+    main { padding: 25px 18px; }
+    .card {
+      max-width: 420px;
+      margin: 25px auto;
+      padding: 22px;
+      border-radius: 18px;
+      background: #ffffff18;
+      border: 1px solid #ffffff35;
+    }
+    button {
+      padding: 12px 20px;
+      margin: 8px;
+      border: 0;
+      border-radius: 10px;
+      background: #a78bfa;
+      color: #111;
+      font-size: 16px;
+    }
+    input {
+      padding: 12px;
+      max-width: 80%;
+      border-radius: 8px;
+      border: 0;
+    }
+    footer { padding: 20px; color: #ddd; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>🌟 Rohit's World 🌟</h1>
+    <p>Welcome to my personal website!</p>
+  </header>
+
+  <main>
+    <div class="card">
+      <h2>नमस्ते दोस्तों! 👋</h2>
+      <p>यह मेरी अपनी वेबसाइट है। मेरी दुनिया में आपका स्वागत है!</p>
+      <button onclick="welcome()">Click Me!</button>
+      <p id="message"></p>
+    </div>
+
+    <div class="card">
+      <h2>अपना नाम लिखो</h2>
+      <input id="name" placeholder="तुम्हारा नाम">
+      <button onclick="greet()">Submit</button>
+      <p id="greeting"></p>
+    </div>
+  </main>
+
+  <footer>Made with ❤️ by Rohit</footer>
+
+  <script>
+    function welcome() {
+      document.getElementById("message").textContent =
+        "Welcome to Rohit's World! 🎉";
+    }
+    function greet() {
+      const name = document.getElementById("name").value.trim();
+      document.getElementById("greeting").textContent = name
+        ? "Hello, " + name + "! 😊"
+        : "पहले अपना नाम लिखो!";
+    }
+  </script>
+</body>
+</html>
