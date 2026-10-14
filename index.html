@@ -2,151 +2,82 @@
 <html lang="hi">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Rohit's Racing World</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Rohit's Ultimate Racing</title>
 <style>
-body {
-  margin: 0;
-  text-align: center;
-  font-family: Arial, sans-serif;
-  background: #10152f;
-  color: white;
-}
-h1 { color: #00ffcc; }
-#game {
-  width: 300px;
-  height: 430px;
-  background: #444;
-  margin: 15px auto;
-  position: relative;
-  overflow: hidden;
-  border: 5px solid white;
-  border-radius: 12px;
-}
-.line {
-  position: absolute;
-  left: 145px;
-  width: 8px;
-  height: 65px;
-  background: white;
-}
-.car {
-  position: absolute;
-  font-size: 40px;
-  width: 45px;
-  text-align: center;
-}
-#player {
-  bottom: 15px;
-  left: 125px;
-}
-.enemy {
-  top: -60px;
-}
-button {
-  padding: 13px 23px;
-  margin: 6px;
-  border: 0;
-  border-radius: 10px;
-  background: #00ffcc;
-  font-size: 18px;
-  font-weight: bold;
-}
-#message { color: yellow; }
+*{box-sizing:border-box}
+body{margin:0;text-align:center;font-family:Arial;background:#10152f;color:white}
+h1{color:#00ffd0}
+.panel{margin:10px;padding:10px;background:#20294a;border-radius:12px}
+#road{width:300px;height:420px;margin:auto;position:relative;overflow:hidden;background:#454545;border:5px solid white;border-radius:12px}
+.line{position:absolute;left:145px;width:6px;height:65px;background:white}
+.car{position:absolute;font-size:35px;width:45px;text-align:center}
+#player{bottom:12px;left:125px}
+.enemy,.coin{top:-50px}
+button,select{padding:11px;margin:4px;border:0;border-radius:9px;font-weight:bold}
+button{background:#00ffd0;color:#10152f}
+#nitro{background:#ffb000}
 </style>
 </head>
 <body>
-
-<h1>🏎️ Rohit's Racing World</h1>
-<p>दूसरी कारों से बचो और हाई स्कोर बनाओ!</p>
-<h2>Score: <span id="score">0</span></h2>
-
-<div id="game">
-  <div class="line" style="top:20px"></div>
-  <div class="line" style="top:150px"></div>
-  <div class="line" style="top:280px"></div>
-  <div id="player" class="car">🏎️</div>
+<h1>🏎️ ROHIT'S RACING</h1>
+<div class="panel">
+🏆 Score: <span id="score">0</span> |
+🪙 Coins: <span id="coins">0</span><br>
+⭐ Best: <span id="best">0</span>
 </div>
-
+<div class="panel">
+कार चुनो:
+<select id="choice" onchange="changeCar()">
+<option value="🏎️">Supercar</option>
+<option value="🚗">Classic</option>
+<option value="🚙">SUV</option>
+<option value="🏎️">Racer</option>
+</select>
+</div>
+<div id="road">
+<div class="line" style="top:20px"></div>
+<div class="line" style="top:150px"></div>
+<div class="line" style="top:280px"></div>
+<div class="car" id="player">🏎️</div>
+</div>
 <div>
-  <button onclick="move(-1)">⬅️ LEFT</button>
-  <button onclick="move(1)">RIGHT ➡️</button>
+<button onclick="move(-1)">⬅️ LEFT</button>
+<button onclick="move(1)">RIGHT ➡️</button>
 </div>
-<button onclick="startGame()">▶️ START / RESTART</button>
-<p id="message">START दबाकर गेम खेलो!</p>
-
+<div>
+<button id="nitro" onclick="boost()">🚀 NITRO</button>
+<button onclick="start()">▶ START / RESTART</button>
+<button onclick="soundToggle()">🔊 SOUND</button>
+</div>
+<p id="msg">START दबाकर रेस शुरू करो!</p>
 <script>
-const game = document.getElementById("game");
-const player = document.getElementById("player");
-const scoreText = document.getElementById("score");
-const message = document.getElementById("message");
+const road=document.getElementById('road');
+const player=document.getElementById('player');
+let lane=1,score=0,coins=0,running=false,speed=4;
+let enemies=[],items=[],loop,timer,boosting=false,soundOn=true,audio;
+let best=Number(localStorage.getItem('rohitBest')||0);
+document.getElementById('best').textContent=best;
+document.getElementById('coins').textContent=Number(localStorage.getItem('rohitCoins')||0);
 
-let lane = 1;
-let score = 0;
-let running = false;
-let enemies = [];
-let timer, animation;
-
-function move(direction) {
-  if (!running) return;
-  lane = Math.max(0, Math.min(2, lane + direction));
-  player.style.left = (30 + lane * 90) + "px";
+function beep(freq=500){
+ if(!soundOn)return;
+ try{
+  audio=audio||new (window.AudioContext||window.webkitAudioContext)();
+  const o=audio.createOscillator(),g=audio.createGain();
+  o.frequency.value=freq;g.gain.value=.05;
+  o.connect(g);g.connect(audio.destination);o.start();
+  o.stop(audio.currentTime+.12);
+ }catch(e){}
 }
-
-function startGame() {
-  clearInterval(timer);
-  cancelAnimationFrame(animation);
-  enemies.forEach(e => e.el.remove());
-  enemies = [];
-  lane = 1;
-  score = 0;
-  running = true;
-  scoreText.textContent = 0;
-  message.textContent = "🚗 गाड़ी चलाओ और बचो!";
-  player.style.left = "120px";
-  timer = setInterval(createEnemy, 1000);
-  animate();
+function move(d){
+ if(!running)return;
+ lane=Math.max(0,Math.min(2,lane+d));
+ player.style.left=(35+lane*90)+'px';beep(300);
 }
-
-function createEnemy() {
-  if (!running) return;
-  const el = document.createElement("div");
-  el.className = "car enemy";
-  el.textContent = ["🚕", "🚙", "🚗"][Math.floor(Math.random()*3)];
-  const laneNum = Math.floor(Math.random() * 3);
-  el.style.left = (30 + laneNum * 90) + "px";
-  game.appendChild(el);
-  enemies.push({el, lane: laneNum, y: -50});
-}
-
-function animate() {
-  if (!running) return;
-  for (let i = enemies.length - 1; i >= 0; i--) {
-    const e = enemies[i];
-    e.y += 4 + score / 20;
-    e.el.style.top = e.y + "px";
-
-    if (e.lane === lane && e.y > 330 && e.y < 410) {
-      running = false;
-      clearInterval(timer);
-      message.textContent = "💥 GAME OVER! START दबाकर फिर खेलो।";
-      return;
-    }
-    if (e.y > 450) {
-      e.el.remove();
-      enemies.splice(i, 1);
-      score++;
-      scoreText.textContent = score;
-    }
-  }
-  animation = requestAnimationFrame(animate);
-}
-
-document.addEventListener("keydown", e => {
-  if (e.key === "ArrowLeft") move(-1);
-  if (e.key === "ArrowRight") move(1);
-});
-</script>
-
-</body>
-</html>
+function changeCar(){player.textContent=document.getElementById('choice').value}
+function soundToggle(){soundOn=!soundOn;document.getElementById('msg').textContent=soundOn?'🔊 Sound ON':'🔇 Sound OFF'}
+function boost(){
+ if(!running||boosting)return;
+ boosting=true;speed=9;document.getElementById('msg').textContent='🚀 NITRO BOOST!';
+ beep
