@@ -172,3 +172,106 @@ function move(direction) {
   const maxX = road.clientWidth - player.offsetWidth;
   x = Math.max(0, Math.min(maxX, x));
 
+  player.style.left = x + "px";
+}
+
+document.getElementById("leftBtn").addEventListener("click", () => move(-1));
+document.getElementById("rightBtn").addEventListener("click", () => move(1));
+
+document.getElementById("nitroBtn").addEventListener("click", () => {
+  if (running && nitro > 0) {
+    nitro--;
+    nitroText.textContent = nitro;
+    nitroUntil = performance.now() + 2000;
+    message.textContent = "⚡ NITRO BOOST!";
+  }
+});
+
+document.getElementById("startBtn").addEventListener("click", startGame);
+
+document.addEventListener("keydown", event => {
+  if (event.key === "ArrowLeft") move(-1);
+  if (event.key === "ArrowRight") move(1);
+});
+
+function createEnemy() {
+  const element = document.createElement("div");
+  element.className = "car enemy";
+
+  const maxX = road.clientWidth - 42;
+  const enemyX = Math.random() * maxX;
+
+  element.style.left = enemyX + "px";
+  element.style.top = "-70px";
+
+  road.appendChild(element);
+
+  enemies.push({
+    element: element,
+    x: enemyX,
+    y: -70
+  });
+}
+
+function loop(time) {
+  if (!running) return;
+
+  if (!lastTime) lastTime = time;
+
+  const delta = Math.min((time - lastTime) / 16.67, 2);
+  lastTime = time;
+
+  const boosting = time < nitroUntil;
+  const speed = boosting ? 9 : 4;
+
+  spawnTimer += delta;
+
+  if (spawnTimer > 38) {
+    createEnemy();
+    spawnTimer = 0;
+  }
+
+  enemies.forEach(enemy => {
+    enemy.y += speed * delta;
+    enemy.element.style.top = enemy.y + "px";
+
+    const playerY = road.clientHeight - 15 - player.offsetHeight;
+
+    const hit =
+      enemy.x < x + player.offsetWidth - 5 &&
+      enemy.x + enemy.element.offsetWidth > x + 5 &&
+      enemy.y < playerY + player.offsetHeight - 5 &&
+      enemy.y + enemy.element.offsetHeight > playerY + 5;
+
+    if (hit) {
+      gameOver();
+    }
+
+    if (enemy.y > road.clientHeight) {
+      enemy.element.remove();
+      enemy.remove = true;
+      coins++;
+      coinsText.textContent = coins;
+    }
+  });
+
+  enemies = enemies.filter(enemy => !enemy.remove);
+
+  score += boosting ? 2 : 1;
+  scoreText.textContent = score;
+
+  if (running) {
+    animationId = requestAnimationFrame(loop);
+  }
+}
+
+function gameOver() {
+  running = false;
+  cancelAnimationFrame(animationId);
+
+  message.textContent = "🏁 GAME OVER! फिर से START दबाओ।";
+}
+</script>
+
+</body>
+</html>
