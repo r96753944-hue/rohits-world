@@ -2,82 +2,173 @@
 <html lang="hi">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Rohit's Ultimate Racing</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Rohit's Racing Game</title>
+
 <style>
-*{box-sizing:border-box}
-body{margin:0;text-align:center;font-family:Arial;background:#10152f;color:white}
-h1{color:#00ffd0}
-.panel{margin:10px;padding:10px;background:#20294a;border-radius:12px}
-#road{width:300px;height:420px;margin:auto;position:relative;overflow:hidden;background:#454545;border:5px solid white;border-radius:12px}
-.line{position:absolute;left:145px;width:6px;height:65px;background:white}
-.car{position:absolute;font-size:35px;width:45px;text-align:center}
-#player{bottom:12px;left:125px}
-.enemy,.coin{top:-50px}
-button,select{padding:11px;margin:4px;border:0;border-radius:9px;font-weight:bold}
-button{background:#00ffd0;color:#10152f}
-#nitro{background:#ffb000}
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: #101820;
+  color: white;
+  font-family: Arial, sans-serif;
+  text-align: center;
+}
+
+h1 { color: #00ffcc; }
+
+.game {
+  width: 320px;
+  max-width: 95vw;
+  margin: auto;
+}
+
+.stats {
+  display: flex;
+  justify-content: space-around;
+  margin: 10px 0;
+  font-size: 14px;
+}
+
+#road {
+  width: 100%;
+  height: 440px;
+  background: #444;
+  border-left: 7px solid white;
+  border-right: 7px solid white;
+  position: relative;
+  overflow: hidden;
+}
+
+.line {
+  position: absolute;
+  left: 50%;
+  top: -100px;
+  height: 650px;
+  border-left: 5px dashed white;
+  transform: translateX(-50%);
+}
+
+.car {
+  position: absolute;
+  width: 42px;
+  height: 65px;
+  border-radius: 10px;
+  border: 3px solid white;
+}
+
+#player {
+  bottom: 15px;
+  left: 132px;
+  background: #00e5ff;
+}
+
+.enemy {
+  background: #ff3333;
+}
+
+button {
+  border: none;
+  padding: 12px 18px;
+  margin: 5px;
+  border-radius: 10px;
+  font-weight: bold;
+  font-size: 16px;
+  cursor: pointer;
+}
+
+#startBtn { background: #00ff88; }
+#leftBtn, #rightBtn { background: #ffcc00; }
+#nitroBtn { background: #ff6600; color: white; }
+
+#message {
+  margin: 10px;
+  color: #00ffcc;
+}
 </style>
 </head>
-<body>
-<h1>🏎️ ROHIT'S RACING</h1>
-<div class="panel">
-🏆 Score: <span id="score">0</span> |
-🪙 Coins: <span id="coins">0</span><br>
-⭐ Best: <span id="best">0</span>
-</div>
-<div class="panel">
-कार चुनो:
-<select id="choice" onchange="changeCar()">
-<option value="🏎️">Supercar</option>
-<option value="🚗">Classic</option>
-<option value="🚙">SUV</option>
-<option value="🏎️">Racer</option>
-</select>
-</div>
-<div id="road">
-<div class="line" style="top:20px"></div>
-<div class="line" style="top:150px"></div>
-<div class="line" style="top:280px"></div>
-<div class="car" id="player">🏎️</div>
-</div>
-<div>
-<button onclick="move(-1)">⬅️ LEFT</button>
-<button onclick="move(1)">RIGHT ➡️</button>
-</div>
-<div>
-<button id="nitro" onclick="boost()">🚀 NITRO</button>
-<button onclick="start()">▶ START / RESTART</button>
-<button onclick="soundToggle()">🔊 SOUND</button>
-</div>
-<p id="msg">START दबाकर रेस शुरू करो!</p>
-<script>
-const road=document.getElementById('road');
-const player=document.getElementById('player');
-let lane=1,score=0,coins=0,running=false,speed=4;
-let enemies=[],items=[],loop,timer,boosting=false,soundOn=true,audio;
-let best=Number(localStorage.getItem('rohitBest')||0);
-document.getElementById('best').textContent=best;
-document.getElementById('coins').textContent=Number(localStorage.getItem('rohitCoins')||0);
 
-function beep(freq=500){
- if(!soundOn)return;
- try{
-  audio=audio||new (window.AudioContext||window.webkitAudioContext)();
-  const o=audio.createOscillator(),g=audio.createGain();
-  o.frequency.value=freq;g.gain.value=.05;
-  o.connect(g);g.connect(audio.destination);o.start();
-  o.stop(audio.currentTime+.12);
- }catch(e){}
+<body>
+
+<h1>🏎️ ROHIT'S RACING</h1>
+
+<div class="game">
+
+  <div class="stats">
+    <span>🏆 Score: <b id="score">0</b></span>
+    <span>🪙 Coins: <b id="coins">0</b></span>
+    <span>⚡ Nitro: <b id="nitro">3</b></span>
+  </div>
+
+  <div id="road">
+    <div class="line" id="line"></div>
+    <div class="car" id="player"></div>
+  </div>
+
+  <p id="message">START दबाकर रेस शुरू करो!</p>
+
+  <button id="startBtn">▶ START</button>
+  <br>
+  <button id="leftBtn">⬅ LEFT</button>
+  <button id="rightBtn">RIGHT ➡</button>
+  <br>
+  <button id="nitroBtn">⚡ NITRO</button>
+
+  <p>🚗 दुश्मन की कार से बचो और Coins इकट्ठा करो!</p>
+
+</div>
+
+<script>
+const road = document.getElementById("road");
+const player = document.getElementById("player");
+
+const scoreText = document.getElementById("score");
+const coinsText = document.getElementById("coins");
+const nitroText = document.getElementById("nitro");
+const message = document.getElementById("message");
+
+let running = false;
+let x = 132;
+let score = 0;
+let coins = 0;
+let nitro = 3;
+let enemies = [];
+let lastTime = 0;
+let spawnTimer = 0;
+let animationId = 0;
+let nitroUntil = 0;
+
+function startGame() {
+  cancelAnimationFrame(animationId);
+
+  enemies.forEach(enemy => enemy.element.remove());
+  enemies = [];
+
+  x = road.clientWidth / 2 - 21;
+  score = 0;
+  coins = 0;
+  nitro = 3;
+  spawnTimer = 0;
+  lastTime = 0;
+  nitroUntil = 0;
+  running = true;
+
+  player.style.left = x + "px";
+
+  scoreText.textContent = score;
+  coinsText.textContent = coins;
+  nitroText.textContent = nitro;
+  message.textContent = "रेस शुरू! कारों से बचो!";
+
+  animationId = requestAnimationFrame(loop);
 }
-function move(d){
- if(!running)return;
- lane=Math.max(0,Math.min(2,lane+d));
- player.style.left=(35+lane*90)+'px';beep(300);
-}
-function changeCar(){player.textContent=document.getElementById('choice').value}
-function soundToggle(){soundOn=!soundOn;document.getElementById('msg').textContent=soundOn?'🔊 Sound ON':'🔇 Sound OFF'}
-function boost(){
- if(!running||boosting)return;
- boosting=true;speed=9;document.getElementById('msg').textContent='🚀 NITRO BOOST!';
- beep
+
+function move(direction) {
+  if (!running) return;
+
+  x += direction * 25;
+
+  const maxX = road.clientWidth - player.offsetWidth;
+  x = Math.max(0, Math.min(maxX, x));
+
