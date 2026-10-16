@@ -1,0 +1,12 @@
+{
+  "id": "/rohits-world/",
+  "name": "Rohit's Racing",
+  "short_name": "Rohit Race",
+  "description": "Rohit's Racing Car Game - Race, collect coins and enjoy!",
+  "start_url": "/rohits-world/",
+  "scope": "/rohits-world/",
+  "display": "standalone",
+  "background_color": "#101820",
+  "theme_color": "#00ffcc",
+  "icons": []
+}
